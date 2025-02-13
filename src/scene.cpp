@@ -71,6 +71,10 @@ void OurTestScene::Update(
 	if (input_handler.IsKeyPressed(Keys::Left) || input_handler.IsKeyPressed(Keys::A))
 		m_camera->Move({ -m_camera_velocity * dt, 0.0f, 0.0f });
 
+	long mousedx = input_handler.GetMouseDeltaX();
+	long mousedy = input_handler.GetMouseDeltaY();
+	m_camera->UpdateRotation(mousedx, mousedy, 0.03f); // sensitivity factor
+
 	// Now set/update object transformations
 	// This can be done using any sequence of transformation matrices,
 	// but the T*R*S order is most common; i.e. scale, then rotate, and then translate.
@@ -119,12 +123,12 @@ void OurTestScene::Render()
 	m_projection_matrix = m_camera->ProjectionMatrix();
 
 	// Load matrices + the Quad's transformation to the device and render it
-	/*UpdateTransformationBuffer(m_quad_transform, m_view_matrix, m_projection_matrix);
-	m_quad->Render();*/
+	UpdateTransformationBuffer(m_quad_transform, m_view_matrix, m_projection_matrix);
+	m_quad->Render();
 
 	// Load matrices + Sponza's transformation to the device and render it
-	/*UpdateTransformationBuffer(m_sponza_transform, m_view_matrix, m_projection_matrix);
-	m_sponza->Render();*/
+	UpdateTransformationBuffer(m_sponza_transform, m_view_matrix, m_projection_matrix);
+	m_sponza->Render();
 
 	UpdateTransformationBuffer(m_cube_transform, m_view_matrix, m_projection_matrix);
 	m_cube->Render();
