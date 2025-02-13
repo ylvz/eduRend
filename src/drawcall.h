@@ -28,6 +28,7 @@ struct Vertex
 	vec3f Tangent; //!< Tangent of the vertex
 	vec3f Binormal; //!< Binormal of the vertex
 	vec2f TexCoord; //!< 2D texture coordiante of the vertex
+
 };
 
 /**

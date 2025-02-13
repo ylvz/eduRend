@@ -23,6 +23,7 @@
 #include "Camera.h"
 #include "Model.h"
 #include "Scene.h"
+#include "Cube.h"
 
 //--------------------------------------------------------------------------------------
 // Global Variables
@@ -299,7 +300,7 @@ HRESULT InitDirect3DAndSwapChain(int width, int height)
 void InitRasterizerState()
 {
 	D3D11_RASTERIZER_DESC rasterizerState{};
-	rasterizerState.FillMode = D3D11_FILL_SOLID;
+	rasterizerState.FillMode = D3D11_FILL_WIREFRAME;
 	rasterizerState.CullMode = D3D11_CULL_BACK;
 	rasterizerState.FrontCounterClockwise = true;
 	rasterizerState.DepthBias = false;
