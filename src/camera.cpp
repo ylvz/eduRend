@@ -12,27 +12,24 @@ void Camera::Move(const vec3f& direction) noexcept
 	m_position += direction;
 }
 
-void Camera::UpdateRotation(long mousedx, long mousedy, float sensitivity) noexcept
+void Camera::Rotate(const float& roll, const float& yaw, const float& pitch, const float& sensitivity) noexcept
 {
-    // Apply the sensitivity factor to the mouse movement
-    m_yaw += mousedx * sensitivity;
-    m_pitch -= mousedy * sensitivity;
-
-    // Constrain the pitch to prevent the camera from flipping upside down
-    if (m_pitch > 89.0f)
-        m_pitch = 89.0f;
-    if (m_pitch < -89.0f)
-        m_pitch = -89.0f;
+	m_rotation.z += roll / sensitivity;
+	m_rotation.y += yaw / sensitivity;
+	m_rotation.x += pitch / sensitivity;
+	rotation_matrix = mat4f::rotation(-m_rotation.z, -m_rotation.y, -m_rotation.x);
 }
-
 
 mat4f Camera::WorldToViewMatrix() const noexcept
 {
-	// Create the rotation matrix for yaw and pitch
-	mat4f rotation = mat4f::rotation(0.0f, m_yaw, m_pitch);
+	// Assuming a camera's position and rotation is defined by matrices T(p) and R,
+	// the View-to-World transform is T(p)*R (for a first-person style camera).
+	//
+	// World-to-View then is the inverse of T(p)*R;
+	//		inverse(T(p)*R) = inverse(R)*inverse(T(p)) = transpose(R)*T(-p)
+	// Since now there is no rotation, this matrix is simply T(-p)
 
-	// Apply translation and rotation (the rightmost matrix is applied first)
-	return rotation * mat4f::translation(-m_position);
+	return transpose(rotation_matrix) * mat4f::translation(-m_position);
 }
 
 mat4f Camera::ProjectionMatrix() const noexcept

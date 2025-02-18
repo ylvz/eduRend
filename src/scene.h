@@ -89,16 +89,21 @@ class OurTestScene : public Scene
 	Model* m_quad;
 	Model* m_sponza;
 	Cube* m_cube;
+	Model* m_hand;
+	Model* m_hand2;
 
 	mat4f m_sponza_transform;
 	mat4f m_quad_transform;
 	mat4f m_cube_transform;
+	mat4f m_hand_transform;
+	mat4f m_hand2_transform;
 
 	mat4f m_view_matrix;
 	mat4f m_projection_matrix;
 
 	// Misc
-	float m_angle = 0;			// A per-frame updated rotation angle (radians)...
+	float m_angle_x = 0;			// A per-frame updated rotation angle (radians)...
+	float m_angle_y = 0;
 	float m_angular_velocity = fPI / 2;	// ...and its velocity (radians/sec)
 	float m_camera_velocity = 5.0f;	// Camera movement velocity in units/s
 	float m_fps_cooldown = 0;

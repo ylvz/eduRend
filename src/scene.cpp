@@ -50,7 +50,10 @@ void OurTestScene::Init()
 	// Create objects
 	m_quad = new QuadModel(m_dxdevice, m_dxdevice_context);
 	m_sponza = new OBJModel("assets/crytek-sponza/sponza.obj", m_dxdevice, m_dxdevice_context);
+
 	m_cube = new Cube(m_dxdevice, m_dxdevice_context);
+	m_hand = new OBJModel("assets/hand/hand.obj", m_dxdevice, m_dxdevice_context);
+	m_hand2 = new OBJModel("assets/hand/hand.obj", m_dxdevice, m_dxdevice_context);
 }
 
 //
@@ -61,6 +64,8 @@ void OurTestScene::Update(
 	float dt,
 	const InputHandler& input_handler)
 {
+
+
 	// Basic camera control
 	if (input_handler.IsKeyPressed(Keys::Up) || input_handler.IsKeyPressed(Keys::W))
 		m_camera->Move({ 0.0f, 0.0f, -m_camera_velocity * dt });
@@ -73,7 +78,7 @@ void OurTestScene::Update(
 
 	long mousedx = input_handler.GetMouseDeltaX();
 	long mousedy = input_handler.GetMouseDeltaY();
-	m_camera->UpdateRotation(mousedx, mousedy, 0.03f); // sensitivity factor
+	m_camera->Rotate(0, mousedx, mousedy, 1000.0f); // sensitivity factor
 
 	// Now set/update object transformations
 	// This can be done using any sequence of transformation matrices,
@@ -83,7 +88,7 @@ void OurTestScene::Update(
 
 	// Quad model-to-world transformation
 	m_quad_transform = mat4f::translation(0, 0, 0) *			// No translation
-		mat4f::rotation(-m_angle, 0.0f, 1.0f, 0.0f) *	// Rotate continuously around the y-axis
+		mat4f::rotation(-m_angle_y, 0.0f, 1.0f, 0.0f) *	// Rotate continuously around the y-axis
 		mat4f::scaling(1.5, 1.5, 1.5);				// Scale uniformly to 150%
 
 	// Sponza model-to-world transformation
@@ -92,11 +97,29 @@ void OurTestScene::Update(
 		mat4f::scaling(0.05f);						 // The scene is quite large so scale it down to 5%
 
 	// Increment the rotation angle.
-	m_angle += m_angular_velocity * dt;
+	m_angle_x += m_angular_velocity * dt;
+	m_angle_y += m_angular_velocity * dt;
 
-	m_cube_transform = mat4f::translation(0, 0, 0) *			// No translation
-		mat4f::rotation(-m_angle, 0.0f, 1.0f, 0.0f) *	// Rotate continuously around the y-axis
-		mat4f::scaling(1.5, 1.5, 1.5);
+	// Cube model-to-world transformation (stays as is)
+	m_cube_transform = mat4f::translation(0, 0, -5) *
+		mat4f::rotation(-m_angle_x, 1.0f, 0.0f, 0.0f) *
+		mat4f::rotation(-m_angle_y, 0.0f, 1.0f, 0.0f) *
+		mat4f::scaling(0.5, 0.5, 0.5);
+
+	// Hand orbits around the cube
+	m_hand_transform = mat4f::translation(0, 0, -5) *           // Position relative to the cube
+		mat4f::rotation(m_angle_y, 0.0f, 1.0f, 0.0f) *          // Orbit around the cube
+		mat4f::translation(3, 0, 0) *                           // Offset from the cube
+		mat4f::scaling(0.5);
+
+	// Hand2 orbits around the hand
+	m_hand2_transform = m_hand_transform *                       // Start with hand's transformation
+		mat4f::rotation(m_angle_y * 2, 0.0f, 1.0f, 0.0f) *      // Faster orbit around the hand
+		mat4f::translation(2, 0, 0) *                           // Offset from the hand
+		mat4f::scaling(0.5);
+	// Scale the orbiting hand
+
+
 
 
 
@@ -122,9 +145,9 @@ void OurTestScene::Render()
 	m_view_matrix = m_camera->WorldToViewMatrix();
 	m_projection_matrix = m_camera->ProjectionMatrix();
 
-	// Load matrices + the Quad's transformation to the device and render it
-	UpdateTransformationBuffer(m_quad_transform, m_view_matrix, m_projection_matrix);
-	m_quad->Render();
+	//// Load matrices + the Quad's transformation to the device and render it
+	//UpdateTransformationBuffer(m_quad_transform, m_view_matrix, m_projection_matrix);
+	//m_quad->Render();
 
 	// Load matrices + Sponza's transformation to the device and render it
 	UpdateTransformationBuffer(m_sponza_transform, m_view_matrix, m_projection_matrix);
@@ -132,6 +155,12 @@ void OurTestScene::Render()
 
 	UpdateTransformationBuffer(m_cube_transform, m_view_matrix, m_projection_matrix);
 	m_cube->Render();
+
+	UpdateTransformationBuffer(m_hand_transform, m_view_matrix, m_projection_matrix);
+	m_hand->Render();
+
+	UpdateTransformationBuffer(m_hand2_transform, m_view_matrix, m_projection_matrix);
+	m_hand2->Render();
 }
 
 void OurTestScene::Release()
