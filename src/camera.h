@@ -38,6 +38,7 @@ public:
 	*/
 	void Move(const linalg::vec3f& direction) noexcept;
 
+
 	void Rotate(const float& roll, const float& yaw, const float& pitch, const float& sensitivity) noexcept;
 
 	/**
@@ -59,6 +60,10 @@ public:
 	 * @note In a performance sensitive situation this matrix should be precomputed if possible
 	*/
 	linalg::mat4f ProjectionMatrix() const noexcept;
+
+	linalg::mat4f ViewToWorldMatrix() noexcept;
+
+	void MoveFirstPerson(const linalg::vec3f& direction) noexcept;
 
 private:
 	// Aperture attributes

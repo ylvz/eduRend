@@ -12,6 +12,8 @@ public:
 
     void Render() const override;
 
+    void CubeBuffers(ID3D11Device* dxdevice);
+
 private:
 
     std::vector<Vertex> vertices{24};  // Samling av vertices

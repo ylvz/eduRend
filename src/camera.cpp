@@ -12,12 +12,15 @@ void Camera::Move(const vec3f& direction) noexcept
 	m_position += direction;
 }
 
+
+
 void Camera::Rotate(const float& roll, const float& yaw, const float& pitch, const float& sensitivity) noexcept
 {
 	m_rotation.z += roll / sensitivity;
 	m_rotation.y += yaw / sensitivity;
 	m_rotation.x += pitch / sensitivity;
 	rotation_matrix = mat4f::rotation(-m_rotation.z, -m_rotation.y, -m_rotation.x);
+	m_rotation.x = clamp(m_rotation.x, -(fPI / 2), fPI / 2);
 }
 
 mat4f Camera::WorldToViewMatrix() const noexcept
@@ -35,4 +38,20 @@ mat4f Camera::WorldToViewMatrix() const noexcept
 mat4f Camera::ProjectionMatrix() const noexcept
 {
 	return mat4f::projection(m_vertical_fov, m_aspect_ratio, m_near_plane, m_far_plane);
+}
+
+void Camera::MoveFirstPerson(const vec3f& direction) noexcept 
+{
+	vec4f moving_direction = { direction.x, direction.y, direction.z, 0 };
+
+	vec4f movement = ViewToWorldMatrix() * moving_direction;
+
+	m_position.x += movement.x;
+	m_position.y += movement.y;
+	m_position.z += movement.z;
+}
+
+linalg::mat4f Camera::ViewToWorldMatrix() noexcept 
+{
+	return mat4f::translation(m_position) * rotation_matrix;
 }

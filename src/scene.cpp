@@ -67,14 +67,23 @@ void OurTestScene::Update(
 
 
 	// Basic camera control
-	if (input_handler.IsKeyPressed(Keys::Up) || input_handler.IsKeyPressed(Keys::W))
+	/*if (input_handler.IsKeyPressed(Keys::Up) || input_handler.IsKeyPressed(Keys::W))
 		m_camera->Move({ 0.0f, 0.0f, -m_camera_velocity * dt });
 	if (input_handler.IsKeyPressed(Keys::Down) || input_handler.IsKeyPressed(Keys::S))
 		m_camera->Move({ 0.0f, 0.0f, m_camera_velocity * dt });
 	if (input_handler.IsKeyPressed(Keys::Right) || input_handler.IsKeyPressed(Keys::D))
 		m_camera->Move({ m_camera_velocity * dt, 0.0f, 0.0f });
 	if (input_handler.IsKeyPressed(Keys::Left) || input_handler.IsKeyPressed(Keys::A))
-		m_camera->Move({ -m_camera_velocity * dt, 0.0f, 0.0f });
+		m_camera->Move({ -m_camera_velocity * dt, 0.0f, 0.0f });*/
+
+	if (input_handler.IsKeyPressed(Keys::Up) || input_handler.IsKeyPressed(Keys::W))
+		m_camera->MoveFirstPerson({ 0.0f, 0.0f, -m_camera_velocity * dt });
+	if (input_handler.IsKeyPressed(Keys::Down) || input_handler.IsKeyPressed(Keys::S))
+		m_camera->MoveFirstPerson({ 0.0f, 0.0f, m_camera_velocity * dt });
+	if (input_handler.IsKeyPressed(Keys::Right) || input_handler.IsKeyPressed(Keys::D))
+		m_camera->MoveFirstPerson({ m_camera_velocity * dt, 0.0f, 0.0f });
+	if (input_handler.IsKeyPressed(Keys::Left) || input_handler.IsKeyPressed(Keys::A))
+		m_camera->MoveFirstPerson({ -m_camera_velocity * dt, 0.0f, 0.0f });
 
 	long mousedx = input_handler.GetMouseDeltaX();
 	long mousedy = input_handler.GetMouseDeltaY();
@@ -209,4 +218,27 @@ void OurTestScene::UpdateTransformationBuffer(
 	matrixBuffer->WorldToViewMatrix = WorldToViewMatrix;
 	matrixBuffer->ProjectionMatrix = ProjectionMatrix;
 	m_dxdevice_context->Unmap(m_transformation_buffer, 0);
+}
+
+void OurTestScene::InitLightBuffer()
+{
+	HRESULT hr;
+	D3D11_BUFFER_DESC matrixBufferDesc = { 0 };
+	matrixBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	matrixBufferDesc.ByteWidth = sizeof(LightBuffer);
+	matrixBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	matrixBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	matrixBufferDesc.MiscFlags = 0;
+	matrixBufferDesc.StructureByteStride = 0;
+	ASSERT(hr = m_dxdevice->CreateBuffer(&matrixBufferDesc, nullptr, &m_light_buffer));
+}
+
+void OurTestScene::UpdateLightBuffer(vec4f light_position, vec4f camera_position)
+{
+	D3D11_MAPPED_SUBRESOURCE resource;
+	m_dxdevice_context->Map(m_light_buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &resource);
+	LightBuffer* light_buffer = (LightBuffer*)resource.pData;
+	light_buffer->light_position = light_position;
+	light_buffer->camera_position = camera_position;
+	m_dxdevice_context->Unmap(m_light_buffer, 0);
 }
