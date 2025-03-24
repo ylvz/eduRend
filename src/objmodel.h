@@ -50,4 +50,7 @@ public:
 	 * @brief Destructor 
 	*/
 	~OBJModel();
+
+	void InitMaterialBuffer();
+	void UpdateMaterialBuffer(Material material) const;
 };

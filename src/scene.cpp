@@ -30,6 +30,7 @@ OurTestScene::OurTestScene(
 	Scene(dxdevice, dxdevice_context, window_width, window_height)
 { 
 	InitTransformationBuffer();
+	InitLightBuffer();
 	// + init other CBuffers
 }
 
@@ -47,9 +48,9 @@ void OurTestScene::Init()
 	// Move camera to (0,0,5)
 	m_camera->MoveTo({ 0, 0, 5 });
 
-	// Create objects
-	m_quad = new QuadModel(m_dxdevice, m_dxdevice_context);
-	m_sponza = new OBJModel("assets/crytek-sponza/sponza.obj", m_dxdevice, m_dxdevice_context);
+	//// Create objects
+	//m_quad = new QuadModel(m_dxdevice, m_dxdevice_context);
+	//m_sponza = new OBJModel("assets/crytek-sponza/sponza.obj", m_dxdevice, m_dxdevice_context);
 
 	m_cube = new Cube(m_dxdevice, m_dxdevice_context);
 	m_hand = new OBJModel("assets/hand/hand.obj", m_dxdevice, m_dxdevice_context);
@@ -149,6 +150,7 @@ void OurTestScene::Render()
 {
 	// Bind transformation_buffer to slot b0 of the VS
 	m_dxdevice_context->VSSetConstantBuffers(0, 1, &m_transformation_buffer);
+	m_dxdevice_context->PSSetConstantBuffers(0, 1, &m_light_buffer);
 
 	// Obtain the matrices needed for rendering from the camera
 	m_view_matrix = m_camera->WorldToViewMatrix();
@@ -159,17 +161,21 @@ void OurTestScene::Render()
 	//m_quad->Render();
 
 	// Load matrices + Sponza's transformation to the device and render it
-	UpdateTransformationBuffer(m_sponza_transform, m_view_matrix, m_projection_matrix);
-	m_sponza->Render();
+	//UpdateTransformationBuffer(m_sponza_transform, m_view_matrix, m_projection_matrix);
+	//m_sponza->Render();
 
-	UpdateTransformationBuffer(m_cube_transform, m_view_matrix, m_projection_matrix);
-	m_cube->Render();
+	//UpdateTransformationBuffer(m_cube_transform, m_view_matrix, m_projection_matrix);
+	//m_cube->Render();
 
 	UpdateTransformationBuffer(m_hand_transform, m_view_matrix, m_projection_matrix);
 	m_hand->Render();
 
 	UpdateTransformationBuffer(m_hand2_transform, m_view_matrix, m_projection_matrix);
 	m_hand2->Render();
+
+	m_light = { 0,20,0,0 };
+	UpdateLightBuffer(m_light, (m_camera->m_position, 0));
+
 }
 
 void OurTestScene::Release()
@@ -179,6 +185,7 @@ void OurTestScene::Release()
 	SAFE_DELETE(m_camera);
 
 	SAFE_RELEASE(m_transformation_buffer);
+	SAFE_RELEASE(m_light_buffer)
 	// + release other CBuffers
 }
 

@@ -65,6 +65,8 @@ public:
 
 	void MoveFirstPerson(const linalg::vec3f& direction) noexcept;
 
+	linalg::vec3f m_position;
+
 private:
 	// Aperture attributes
 	float m_vertical_fov;
@@ -79,7 +81,7 @@ private:
 	float m_near_plane;
 	float m_far_plane;
 
-	linalg::vec3f m_position;
+
 	linalg::vec3f m_rotation;
 
 	linalg::mat4f rotation_matrix;
