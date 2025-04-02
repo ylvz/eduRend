@@ -92,7 +92,10 @@ Cube::Cube(ID3D11Device* dxdevice, ID3D11DeviceContext* dxdevice_context)
         16, 17, 18, 18, 19, 16,
         20, 21, 22, 22, 23, 20
     };
+}
 
+void Cube::CubeBuffers(ID3D11Device *dxdevice)
+{
     // Vertex array descriptor
     D3D11_BUFFER_DESC vertexbufferDesc{ 0 };
     vertexbufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;

@@ -3,8 +3,8 @@ Texture2D texDiffuse : register(t0);
 
 cbuffer LightCamBuffer : register(b0)
 {
-    float4 light_position;
-    float4 camera_position;
+    float4 LightPosition;
+    float4 CameraPosition;
 };
 
 cbuffer MaterialBuffer : register(b1)
@@ -17,9 +17,9 @@ cbuffer MaterialBuffer : register(b1)
 
 struct PSIn
 {
-    float4 Pos : SV_Position;
-    float3 Normal : NORMAL;
-    float2 TexCoord : TEX;
+	float4 Pos  : SV_Position;
+	float3 Normal : NORMAL;
+	float2 TexCoord : TEX;
     float3 PosWorld : WORLD;
 };
 
@@ -31,17 +31,18 @@ float4 PS_main(PSIn input) : SV_Target
 {
 	// Debug shading #1: map and return normal as a color, i.e. from [-1,1]->[0,1] per component
 	// The 4:th component is opacity and should be = 1
-	//eturn float4(input.Normal*0.5+0.5, 1);
+    //return
+    //float4(input.Normal * 0.5 + 0.5, 1);
 	
 	// Debug shading #2: map and return texture coordinates as a color (blue = 0)
 	
     float3 N = normalize(input.Normal);
-    float3 L = normalize(light_position.xyz - input.PosWorld.xyz);
+    float3 L = normalize(LightPosition.xyz - input.PosWorld.xyz);
     float3 R = reflect(-L, N);
-    float3 V = normalize(camera_position.xyz - input.PosWorld.xyz);
+    float3 V = normalize(LightPosition.xyz - input.PosWorld.xyz);
     
     float4 lambert_diffuse = max(dot(N, L), 0);
-    float4 specular_highlight = max(pow(abs(dot(R, V)), /*shininess*/20), 0);
+    float4 specular_highlight = max(pow(abs(dot(R, V)),10), 0);
    
     float4 ambient_component = ambient;
     float4 diffuse_component = diffuse * lambert_diffuse;
@@ -52,3 +53,5 @@ float4 PS_main(PSIn input) : SV_Target
     return float4(phong_illumination.xyz, 1.0);
 
 }
+
+

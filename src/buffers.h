@@ -1,32 +1,25 @@
-/**
- * @file buffers.h
- * @brief Contains constant buffers
-*/
-
+// buffers.h
 #pragma once
-
 #include "vec/mat.h"
 
-/**
- * @brief Contains transformation matrices.
-*/
-struct TransformationBuffer
-{
-	linalg::mat4f ModelToWorldMatrix; //!< Matrix for converting from object space to world space.
-	linalg::mat4f WorldToViewMatrix; //!< Matrix for converting from world space to view space.
-	linalg::mat4f ProjectionMatrix; //!< Matrix for converting from view space to clip cpace.
+// Constant buffer for transformations
+struct TransformationBuffer {
+    linalg::mat4f ModelToWorldMatrix;
+    linalg::mat4f WorldToViewMatrix;
+    linalg::mat4f ProjectionMatrix;
 };
 
-struct LightBuffer 
-{
-	vec4f light_position;
-	vec4f camera_position;
+// Constant buffer for lighting and camera position
+struct LightBuffer {
+    vec4f LightPosition;
+    vec4f CameraPosition;
 };
 
-struct MaterialBuffer 
-{
-	vec4f diffuse;
-	vec4f specular;
-	vec4f shininess;
-	vec4f ambient;
+// Constant buffer for material properties
+struct MaterialBuffer {
+    vec4f ambient;
+    vec4f diffuse;
+    vec4f specular;
+    float shininess;
+    float padding[3]; // Ensure 16-byte alignment
 };

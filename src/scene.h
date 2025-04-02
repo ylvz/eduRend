@@ -81,6 +81,7 @@ class OurTestScene : public Scene
 	ID3D11Buffer* m_transformation_buffer = nullptr;
 	// + other CBuffers
 	ID3D11Buffer* m_light_buffer = nullptr;
+	ID3D11Buffer* m_material_buffer;  // Add this
 
 	vec4f m_light;
 	//
@@ -93,12 +94,16 @@ class OurTestScene : public Scene
 	Cube* m_cube;
 	Model* m_hand;
 	Model* m_hand2;
+	Model* m_sphere;
 
 	mat4f m_sponza_transform;
 	mat4f m_quad_transform;
 	mat4f m_cube_transform;
 	mat4f m_hand_transform;
 	mat4f m_hand2_transform;
+	mat4f m_sphere_transform;
+
+
 
 	mat4f m_view_matrix;
 	mat4f m_projection_matrix;

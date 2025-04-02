@@ -31,7 +31,7 @@ protected:
 	// Pointers to the class' vertex & index arrays
 	ID3D11Buffer* m_vertex_buffer = nullptr; //!< Pointer to gpu side vertex buffer
 	ID3D11Buffer* m_index_buffer = nullptr; //!< Pointer to gpu side index buffer
-	ID3D11Buffer* m_material_buffer = nullptr;
+	ID3D11Buffer * m_material_buffer = nullptr;
 
 public:
 

@@ -2,6 +2,7 @@
 #include "Scene.h"
 #include "QuadModel.h"
 #include "OBJModel.h"
+#include "cube.h"
 
 Scene::Scene(
 	ID3D11Device* dxdevice,
@@ -28,7 +29,7 @@ OurTestScene::OurTestScene(
 	int window_width,
 	int window_height) :
 	Scene(dxdevice, dxdevice_context, window_width, window_height)
-{ 
+{
 	InitTransformationBuffer();
 	InitLightBuffer();
 	// + init other CBuffers
@@ -50,11 +51,13 @@ void OurTestScene::Init()
 
 	//// Create objects
 	//m_quad = new QuadModel(m_dxdevice, m_dxdevice_context);
-	//m_sponza = new OBJModel("assets/crytek-sponza/sponza.obj", m_dxdevice, m_dxdevice_context);
+	m_sponza = new OBJModel("assets/crytek-sponza/sponza.obj", m_dxdevice, m_dxdevice_context);
 
-	m_cube = new Cube(m_dxdevice, m_dxdevice_context);
+	//m_cube = new Cube(m_dxdevice, m_dxdevice_context);
 	m_hand = new OBJModel("assets/hand/hand.obj", m_dxdevice, m_dxdevice_context);
 	m_hand2 = new OBJModel("assets/hand/hand.obj", m_dxdevice, m_dxdevice_context);
+	m_sphere = new OBJModel("assets/sphere/sphere.obj", m_dxdevice, m_dxdevice_context);
+
 }
 
 //
@@ -112,22 +115,19 @@ void OurTestScene::Update(
 
 	// Cube model-to-world transformation (stays as is)
 	m_cube_transform = mat4f::translation(0, 0, -5) *
-		mat4f::rotation(-m_angle_x, 1.0f, 0.0f, 0.0f) *
-		mat4f::rotation(-m_angle_y, 0.0f, 1.0f, 0.0f) *
 		mat4f::scaling(0.5, 0.5, 0.5);
 
 	// Hand orbits around the cube
 	m_hand_transform = mat4f::translation(0, 0, -5) *           // Position relative to the cube
-		mat4f::rotation(m_angle_y, 0.0f, 1.0f, 0.0f) *          // Orbit around the cube
-		mat4f::translation(3, 0, 0) *                           // Offset from the cube
 		mat4f::scaling(0.5);
 
 	// Hand2 orbits around the hand
-	m_hand2_transform = m_hand_transform *                       // Start with hand's transformation
-		mat4f::rotation(m_angle_y * 2, 0.0f, 1.0f, 0.0f) *      // Faster orbit around the hand
+	m_hand2_transform =                      // Start with hand's transformation
 		mat4f::translation(2, 0, 0) *                           // Offset from the hand
 		mat4f::scaling(0.5);
 	// Scale the orbiting hand
+
+	m_sphere_transform = mat4f::translation(5, 0, 0) * mat4f::scaling(1);
 
 
 
@@ -161,20 +161,25 @@ void OurTestScene::Render()
 	//m_quad->Render();
 
 	// Load matrices + Sponza's transformation to the device and render it
-	//UpdateTransformationBuffer(m_sponza_transform, m_view_matrix, m_projection_matrix);
-	//m_sponza->Render();
+	UpdateTransformationBuffer(m_sponza_transform, m_view_matrix, m_projection_matrix);
+	m_sponza->Render();
 
 	//UpdateTransformationBuffer(m_cube_transform, m_view_matrix, m_projection_matrix);
 	//m_cube->Render();
 
-	UpdateTransformationBuffer(m_hand_transform, m_view_matrix, m_projection_matrix);
-	m_hand->Render();
+	UpdateTransformationBuffer(m_sphere_transform, m_view_matrix, m_projection_matrix);
+	m_sphere->Render();
 
-	UpdateTransformationBuffer(m_hand2_transform, m_view_matrix, m_projection_matrix);
-	m_hand2->Render();
+	//UpdateTransformationBuffer(m_hand_transform, m_view_matrix, m_projection_matrix);
+	//m_hand->Render();
 
-	m_light = { 0,20,0,0 };
-	UpdateLightBuffer(m_light, (m_camera->m_position, 0));
+	//UpdateTransformationBuffer(m_hand2_transform, m_view_matrix, m_projection_matrix);
+	//m_hand2->Render();
+
+	m_light = { 0, 10, 0, 1 };  // The last value should be 1 (for positional light)
+	UpdateLightBuffer(m_light, vec4f(m_camera->m_position, 1));
+
+
 
 }
 
@@ -245,7 +250,7 @@ void OurTestScene::UpdateLightBuffer(vec4f light_position, vec4f camera_position
 	D3D11_MAPPED_SUBRESOURCE resource;
 	m_dxdevice_context->Map(m_light_buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &resource);
 	LightBuffer* light_buffer = (LightBuffer*)resource.pData;
-	light_buffer->light_position = light_position;
-	light_buffer->camera_position = camera_position;
+	light_buffer->LightPosition = light_position;
+	light_buffer->CameraPosition = camera_position;
 	m_dxdevice_context->Unmap(m_light_buffer, 0);
 }

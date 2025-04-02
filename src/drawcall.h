@@ -36,10 +36,10 @@ struct Vertex
 */
 struct Material
 {
-	vec3f AmbientColour		= { 0.0f, 0.5f, 0.0f }; //!< Ambient colour component
-	vec3f DiffuseColour		= { 0.0f, 0.5f, 0.0f }; //!< Diffuse colour component
-	vec3f SpecularColour	= { 1.0f, 1.0f, 1.0f }; //!< Specular colour component
-    
+	vec3f AmbientColour = { 0.0f, 1.0f, 0.0f }; //!< Ambient colour component (green)
+	vec3f DiffuseColour = { 0.0f, 1.0f, 0.0f }; //!< Diffuse colour component (green)
+	vec3f SpecularColour = { 1.0f, 1.0f, 1.0f }; //!< Specular colour component (white)
+	float Shininess = 10.0f; //!< Shininess factor (default value)
 	std::string Name; //!< Name of the Material
 
 	// File paths to textures
