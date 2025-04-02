@@ -17,9 +17,9 @@ struct LightBuffer {
 
 // Constant buffer for material properties
 struct MaterialBuffer {
-    vec4f ambient;
-    vec4f diffuse;
-    vec4f specular;
-    float shininess;
-    float padding[3]; // Ensure 16-byte alignment
+    vec4f ambient;      // 16 bytes
+    vec4f diffuse;      // 16 bytes
+    vec4f specular;     // 16 bytes
+    vec4f shininess;    // 16 bytes
 };
+

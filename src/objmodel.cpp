@@ -82,7 +82,7 @@ OBJModel::OBJModel(
         // + other texture types here - see Material class
         // ...
     }
-    std::cout << "Done." << std::endl;
+    
 
 
 
@@ -101,6 +101,7 @@ void OBJModel::InitMaterialBuffer() {
     materialBufferDesc.StructureByteStride = 0;
 
     HRESULT hr = m_dxdevice->CreateBuffer(&materialBufferDesc, nullptr, &m_material_buffer);
+
     ASSERT(SUCCEEDED(hr));
 }
 
@@ -111,18 +112,9 @@ void OBJModel::UpdateMaterialBuffer(Material material) const
     ASSERT(SUCCEEDED(hr));
 
     MaterialBuffer* dataPtr = (MaterialBuffer*)mappedResource.pData;
-    dataPtr->ambient = vec4f(material.AmbientColour.x,
-        material.AmbientColour.y,
-        material.AmbientColour.z,
-        1.0f);
-    dataPtr->diffuse = vec4f(material.DiffuseColour.x,
-        material.DiffuseColour.y,
-        material.DiffuseColour.z,
-        1.0f);
-    dataPtr->specular = vec4f(material.SpecularColour.x,
-        material.SpecularColour.y,
-        material.SpecularColour.z,
-        1.0f);
+    dataPtr->ambient = vec4f(material.AmbientColour.x, material.AmbientColour.y, material.AmbientColour.z, 1.0f); // Ensure alpha is 1
+    dataPtr->diffuse = vec4f(material.DiffuseColour.x, material.DiffuseColour.y, material.DiffuseColour.z, 1.0f);
+    dataPtr->specular = vec4f(material.SpecularColour.x,material.SpecularColour.y,material.SpecularColour.z, 1.0f);
     dataPtr->shininess = material.Shininess;
 
     m_dxdevice_context->Unmap(m_material_buffer, 0);
@@ -143,20 +135,18 @@ void OBJModel::Render() const
     // Bind index buffer
     m_dxdevice_context->IASetIndexBuffer(m_index_buffer, DXGI_FORMAT_R32_UINT, 0);
 
-    //Bind material buffer
-    m_dxdevice_context->PSSetConstantBuffers(1, 1, &m_material_buffer);
-
-
     // Iterate Drawcalls
     for (auto& indexRange : m_index_ranges)
     {
         // Fetch material
         const Material& material = m_materials[indexRange.MaterialIndex];
 
+        // Update material buffer with current material
         UpdateMaterialBuffer(material);
 
-        // Bind diffuse texture to slot t0 of the PS
-        m_dxdevice_context->PSSetShaderResources(0, 1, &material.DiffuseTexture.TextureView);
+        // Bind material buffer to slot 1 of PS
+        m_dxdevice_context->PSSetConstantBuffers(1, 1, &m_material_buffer);
+
 
         // Make the drawcall
         m_dxdevice_context->DrawIndexed(indexRange.Size, indexRange.Start, 0);
