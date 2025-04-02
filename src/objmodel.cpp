@@ -92,32 +92,14 @@ OBJModel::OBJModel(
 }
 
 void OBJModel::InitMaterialBuffer() {
-    D3D11_BUFFER_DESC materialBufferDesc = {};
-    materialBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-    materialBufferDesc.ByteWidth = sizeof(MaterialBuffer);
-    materialBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    materialBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-    materialBufferDesc.MiscFlags = 0;
-    materialBufferDesc.StructureByteStride = 0;
 
-    HRESULT hr = m_dxdevice->CreateBuffer(&materialBufferDesc, nullptr, &m_material_buffer);
-
-    ASSERT(SUCCEEDED(hr));
+    Model::InitMaterialBuffer();
 }
 
-void OBJModel::UpdateMaterialBuffer(Material material) const
-{
-    D3D11_MAPPED_SUBRESOURCE mappedResource;
-    HRESULT hr = m_dxdevice_context->Map(m_material_buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-    ASSERT(SUCCEEDED(hr));
-
-    MaterialBuffer* dataPtr = (MaterialBuffer*)mappedResource.pData;
-    dataPtr->ambient = vec4f(material.AmbientColour.x, material.AmbientColour.y, material.AmbientColour.z, 1.0f); // Ensure alpha is 1
-    dataPtr->diffuse = vec4f(material.DiffuseColour.x, material.DiffuseColour.y, material.DiffuseColour.z, 1.0f);
-    dataPtr->specular = vec4f(material.SpecularColour.x,material.SpecularColour.y,material.SpecularColour.z, 1.0f);
-    dataPtr->shininess = material.Shininess;
-
-    m_dxdevice_context->Unmap(m_material_buffer, 0);
+// Correct override syntax:
+void OBJModel::UpdateMaterialBuffer(const Material& material) const /* override */ {
+    
+    Model::UpdateMaterialBuffer(material);
 }
 
 
@@ -127,6 +109,8 @@ void OBJModel::BindMaterialBuffer() {
 
 void OBJModel::Render() const
 {
+    //Moved this outside the for loop because it didnt work when inside
+    UpdateMaterialBuffer(m_material);
     // Bind vertex buffer
     const UINT32 stride = sizeof(Vertex);
     const UINT32 offset = 0;
@@ -141,12 +125,8 @@ void OBJModel::Render() const
         // Fetch material
         const Material& material = m_materials[indexRange.MaterialIndex];
 
-        // Update material buffer with current material
-        UpdateMaterialBuffer(material);
-
         // Bind material buffer to slot 1 of PS
         m_dxdevice_context->PSSetConstantBuffers(1, 1, &m_material_buffer);
-
 
         // Make the drawcall
         m_dxdevice_context->DrawIndexed(indexRange.Size, indexRange.Start, 0);

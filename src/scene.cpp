@@ -2,7 +2,8 @@
 #include "Scene.h"
 #include "QuadModel.h"
 #include "OBJModel.h"
-#include "cube.h"
+#include "Cube.h"
+#include "model.h"
 
 Scene::Scene(
 	ID3D11Device* dxdevice,
@@ -53,10 +54,22 @@ void OurTestScene::Init()
 	//m_quad = new QuadModel(m_dxdevice, m_dxdevice_context);
 	m_sponza = new OBJModel("assets/crytek-sponza/sponza.obj", m_dxdevice, m_dxdevice_context);
 
-	//m_cube = new Cube(m_dxdevice, m_dxdevice_context);
+
+	// In OurTestScene::Init()
+	m_cube = new Cube(m_dxdevice, m_dxdevice_context);
+
+	Material cube_mat;
+	cube_mat.DiffuseColour = { 0.0f, 0.0f, 1.0f }; // Pure blue
+	m_cube->SetMaterial(cube_mat);
+
+
 	m_hand = new OBJModel("assets/hand/hand.obj", m_dxdevice, m_dxdevice_context);
 	m_hand2 = new OBJModel("assets/hand/hand.obj", m_dxdevice, m_dxdevice_context);
 	m_sphere = new OBJModel("assets/sphere/sphere.obj", m_dxdevice, m_dxdevice_context);
+	Material sphere_mat;
+	sphere_mat.DiffuseColour = { 0.0f, 0.0f, 1.0f }; // Pure blue
+	m_sphere->SetMaterial(sphere_mat);
+
 
 }
 
@@ -115,7 +128,7 @@ void OurTestScene::Update(
 
 	// Cube model-to-world transformation (stays as is)
 	m_cube_transform = mat4f::translation(0, 0, -5) *
-		mat4f::scaling(0.5, 0.5, 0.5);
+		mat4f::scaling(1.0, 1.0, 1.0);
 
 	// Hand orbits around the cube
 	m_hand_transform = mat4f::translation(0, 0, -5) *           // Position relative to the cube
@@ -164,8 +177,8 @@ void OurTestScene::Render()
 	UpdateTransformationBuffer(m_sponza_transform, m_view_matrix, m_projection_matrix);
 	m_sponza->Render();
 
-	//UpdateTransformationBuffer(m_cube_transform, m_view_matrix, m_projection_matrix);
-	//m_cube->Render();
+	UpdateTransformationBuffer(m_cube_transform, m_view_matrix, m_projection_matrix);
+	m_cube->Render();
 
 	UpdateTransformationBuffer(m_sphere_transform, m_view_matrix, m_projection_matrix);
 	m_sphere->Render();
@@ -178,7 +191,6 @@ void OurTestScene::Render()
 
 	m_light = { 0, 10, 0, 1 };  // The last value should be 1 (for positional light)
 	UpdateLightBuffer(m_light, vec4f(m_camera->m_position, 1));
-
 
 
 }

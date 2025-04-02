@@ -15,6 +15,7 @@
 #include "Drawcall.h"
 #include "OBJLoader.h"
 #include "Texture.h"
+#include "buffers.h"
 
 using namespace linalg;
 
@@ -32,7 +33,32 @@ protected:
 	ID3D11Buffer* m_vertex_buffer = nullptr; //!< Pointer to gpu side vertex buffer
 	ID3D11Buffer* m_index_buffer = nullptr; //!< Pointer to gpu side index buffer
 	ID3D11Buffer * m_material_buffer = nullptr;
+	Material m_material;
 
+	virtual void UpdateMaterialBuffer(const Material& material) const {
+		if (!m_material_buffer) return;
+
+		D3D11_MAPPED_SUBRESOURCE mapped;
+		if (SUCCEEDED(m_dxdevice_context->Map(m_material_buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped))) {
+			MaterialBuffer* data = static_cast<MaterialBuffer*>(mapped.pData);
+			data->ambient = vec4f(material.AmbientColour, 1.0f);
+			data->diffuse = vec4f(material.DiffuseColour, 1.0f);
+			data->specular = vec4f(material.SpecularColour, 1.0f);
+			data->shininess = material.Shininess;
+			m_dxdevice_context->Unmap(m_material_buffer, 0);
+		}
+	}
+
+	virtual void InitMaterialBuffer() {
+		if (m_material_buffer) return;
+
+		D3D11_BUFFER_DESC desc = {};
+		desc.ByteWidth = sizeof(MaterialBuffer);
+		desc.Usage = D3D11_USAGE_DYNAMIC;
+		desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+		m_dxdevice->CreateBuffer(&desc, nullptr, &m_material_buffer);
+	}
 
 public:
 
@@ -49,10 +75,9 @@ public:
 	*/
 	virtual void Render() const = 0;
 
-	/**
-	 * @brief Destructor.
-	 * @details Releases the vertex and index buffers of the Model.
-	*/
+	void SetMaterial(const Material& new_material) { m_material = new_material; UpdateMaterialBuffer(m_material); }
+
+	Material& GetMaterial() { return m_material; }
 	virtual ~Model()
 	{ 
 		SAFE_RELEASE(m_vertex_buffer);

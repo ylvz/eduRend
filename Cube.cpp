@@ -92,10 +92,9 @@ Cube::Cube(ID3D11Device* dxdevice, ID3D11DeviceContext* dxdevice_context)
         16, 17, 18, 18, 19, 16,
         20, 21, 22, 22, 23, 20
     };
-}
 
-void Cube::CubeBuffers(ID3D11Device *dxdevice)
-{
+
+
     // Vertex array descriptor
     D3D11_BUFFER_DESC vertexbufferDesc{ 0 };
     vertexbufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
@@ -136,6 +135,6 @@ void Cube::Render() const
     m_dxdevice_context->IASetVertexBuffers(0, 1, &m_vertex_buffer, &stride, &offset);
     m_dxdevice_context->IASetIndexBuffer(m_index_buffer, DXGI_FORMAT_R32_UINT, 0);
     m_dxdevice_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
+    UpdateMaterialBuffer(m_material);
     m_dxdevice_context->DrawIndexed(36, 0, 0);
 }
