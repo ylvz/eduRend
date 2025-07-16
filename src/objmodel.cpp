@@ -86,31 +86,14 @@ OBJModel::OBJModel(
 
 
 
-    InitMaterialBuffer();
 
     SAFE_DELETE(mesh);
 }
 
-void OBJModel::InitMaterialBuffer() {
-
-    Model::InitMaterialBuffer();
-}
-
-// Correct override syntax:
-void OBJModel::UpdateMaterialBuffer(const Material& material) const /* override */ {
-    
-    Model::UpdateMaterialBuffer(material);
-}
-
-
-void OBJModel::BindMaterialBuffer() {
-    m_dxdevice_context->PSSetConstantBuffers(1, 1, &m_material_buffer);
-}
 
 void OBJModel::Render() const
 {
     //Moved this outside the for loop because it didnt work when inside
-    UpdateMaterialBuffer(m_material);
     // Bind vertex buffer
     const UINT32 stride = sizeof(Vertex);
     const UINT32 offset = 0;
@@ -126,7 +109,7 @@ void OBJModel::Render() const
         const Material& material = m_materials[indexRange.MaterialIndex];
 
         // Bind material buffer to slot 1 of PS
-        m_dxdevice_context->PSSetConstantBuffers(1, 1, &m_material_buffer);
+        m_dxdevice_context->PSSetShaderResources(0, 1, &material.DiffuseTexture.TextureView);
 
         // Make the drawcall
         m_dxdevice_context->DrawIndexed(indexRange.Size, indexRange.Start, 0);

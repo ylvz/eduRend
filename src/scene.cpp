@@ -32,7 +32,8 @@ OurTestScene::OurTestScene(
 	Scene(dxdevice, dxdevice_context, window_width, window_height)
 {
 	InitTransformationBuffer();
-	InitLightBuffer();
+	InitLightCamBuffer();
+	InitMaterialBuffer();
 	// + init other CBuffers
 }
 
@@ -53,22 +54,26 @@ void OurTestScene::Init()
 	//// Create objects
 	//m_quad = new QuadModel(m_dxdevice, m_dxdevice_context);
 	m_sponza = new OBJModel("assets/crytek-sponza/sponza.obj", m_dxdevice, m_dxdevice_context);
+	m_cube = new Cube(m_dxdevice, m_dxdevice_context);
+	// Set materials for the rest of the models
+	m_cube->SetMaterial(vec3f(0.5f, 0.0f, 0.0f), vec3f(0.1f, 0.1f, 0.1f), vec3f(1.0f, 1.0f, 1.0f));
+	m_sponza->SetMaterial(
+		vec3f(0.3f, 0.3f, 0.3f),
+		vec3f(0.05f, 0.05f, 0.05f),
+		vec3f(1.0f, 1.0f, 1.0f));
+
 
 
 	// In OurTestScene::Init()
-	m_cube = new Cube(m_dxdevice, m_dxdevice_context);
 
-	Material cube_mat;
-	cube_mat.DiffuseColour = { 0.0f, 0.0f, 1.0f }; // Pure blue
-	m_cube->SetMaterial(cube_mat);
+
 
 
 	m_hand = new OBJModel("assets/hand/hand.obj", m_dxdevice, m_dxdevice_context);
 	m_hand2 = new OBJModel("assets/hand/hand.obj", m_dxdevice, m_dxdevice_context);
 	m_sphere = new OBJModel("assets/sphere/sphere.obj", m_dxdevice, m_dxdevice_context);
-	Material sphere_mat;
-	sphere_mat.DiffuseColour = { 0.0f, 0.0f, 1.0f }; // Pure blue
-	m_sphere->SetMaterial(sphere_mat);
+	m_sphere->SetMaterial(vec3f(0.0f, 0.0f, 0.5f), vec3f(0.0f, 0.0f, 0.2f), vec3f(1.0f, 1.0f, 1.0f));
+
 
 
 }
@@ -161,26 +166,32 @@ void OurTestScene::Update(
 //
 void OurTestScene::Render()
 {
+
+	UpdateLightCamBuffer(vec4f(0, 10, 0, 1), vec4f(m_camera->m_position, 1));
+
 	// Bind transformation_buffer to slot b0 of the VS
 	m_dxdevice_context->VSSetConstantBuffers(0, 1, &m_transformation_buffer);
-	m_dxdevice_context->PSSetConstantBuffers(0, 1, &m_light_buffer);
+	m_dxdevice_context->PSSetConstantBuffers(0, 1, &m_lightCam_buffer);
+	m_dxdevice_context->PSSetConstantBuffers(1, 1, &m_material_buffer);
 
 	// Obtain the matrices needed for rendering from the camera
 	m_view_matrix = m_camera->WorldToViewMatrix();
 	m_projection_matrix = m_camera->ProjectionMatrix();
-
 	//// Load matrices + the Quad's transformation to the device and render it
 	//UpdateTransformationBuffer(m_quad_transform, m_view_matrix, m_projection_matrix);
 	//m_quad->Render();
 
 	// Load matrices + Sponza's transformation to the device and render it
 	UpdateTransformationBuffer(m_sponza_transform, m_view_matrix, m_projection_matrix);
+	UpdateMaterialBuffer(m_sponza->m_material, 1.0f);
 	m_sponza->Render();
 
 	UpdateTransformationBuffer(m_cube_transform, m_view_matrix, m_projection_matrix);
+	UpdateMaterialBuffer(m_cube->m_material, 32.0f);
 	m_cube->Render();
 
 	UpdateTransformationBuffer(m_sphere_transform, m_view_matrix, m_projection_matrix);
+	UpdateMaterialBuffer(m_sphere->m_material, 32.0f);
 	m_sphere->Render();
 
 	//UpdateTransformationBuffer(m_hand_transform, m_view_matrix, m_projection_matrix);
@@ -189,8 +200,9 @@ void OurTestScene::Render()
 	//UpdateTransformationBuffer(m_hand2_transform, m_view_matrix, m_projection_matrix);
 	//m_hand2->Render();
 
-	m_light = { 0, 10, 0, 1 };  // The last value should be 1 (for positional light)
-	UpdateLightBuffer(m_light, vec4f(m_camera->m_position, 1));
+
+
+
 
 
 }
@@ -202,7 +214,7 @@ void OurTestScene::Release()
 	SAFE_DELETE(m_camera);
 
 	SAFE_RELEASE(m_transformation_buffer);
-	SAFE_RELEASE(m_light_buffer)
+	SAFE_RELEASE(m_lightCam_buffer)
 	// + release other CBuffers
 }
 
@@ -244,25 +256,54 @@ void OurTestScene::UpdateTransformationBuffer(
 	m_dxdevice_context->Unmap(m_transformation_buffer, 0);
 }
 
-void OurTestScene::InitLightBuffer()
+void OurTestScene::InitLightCamBuffer()
 {
 	HRESULT hr;
 	D3D11_BUFFER_DESC matrixBufferDesc = { 0 };
 	matrixBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-	matrixBufferDesc.ByteWidth = sizeof(LightBuffer);
+	matrixBufferDesc.ByteWidth = sizeof(LightCamBuffer);
 	matrixBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	matrixBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	matrixBufferDesc.MiscFlags = 0;
 	matrixBufferDesc.StructureByteStride = 0;
-	ASSERT(hr = m_dxdevice->CreateBuffer(&matrixBufferDesc, nullptr, &m_light_buffer));
+	ASSERT(hr = m_dxdevice->CreateBuffer(&matrixBufferDesc, nullptr, &m_lightCam_buffer));
 }
 
-void OurTestScene::UpdateLightBuffer(vec4f light_position, vec4f camera_position)
+void OurTestScene::UpdateLightCamBuffer(vec4f lightPos, vec4f cameraPos)
+{
+	// Map the resource buffer, obtain a pointer and then write our matrices to it
+	D3D11_MAPPED_SUBRESOURCE resource;
+	m_dxdevice_context->Map(m_lightCam_buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &resource);
+	LightCamBuffer* matrixBuffer = (LightCamBuffer*)resource.pData;
+	matrixBuffer->lightPos = lightPos;
+	matrixBuffer->cameraPos = cameraPos;
+	m_dxdevice_context->Unmap(m_lightCam_buffer, 0);
+}
+
+void OurTestScene::InitMaterialBuffer()
+{
+	HRESULT hr;
+	D3D11_BUFFER_DESC matrixBufferDesc = { 0 };
+	matrixBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	matrixBufferDesc.ByteWidth = sizeof(MaterialBuffer);
+	matrixBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	matrixBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	matrixBufferDesc.MiscFlags = 0;
+	matrixBufferDesc.StructureByteStride = 0;
+	ASSERT(hr = m_dxdevice->CreateBuffer(&matrixBufferDesc, nullptr, &m_material_buffer));
+}
+
+void OurTestScene::UpdateMaterialBuffer(Material material, float shininess)
 {
 	D3D11_MAPPED_SUBRESOURCE resource;
-	m_dxdevice_context->Map(m_light_buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &resource);
-	LightBuffer* light_buffer = (LightBuffer*)resource.pData;
-	light_buffer->LightPosition = light_position;
-	light_buffer->CameraPosition = camera_position;
-	m_dxdevice_context->Unmap(m_light_buffer, 0);
+	m_dxdevice_context->Map(m_material_buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &resource);
+
+	MaterialBuffer* matrixBuffer = reinterpret_cast<MaterialBuffer*>(resource.pData);
+	matrixBuffer->ambient = vec4f(material.AmbientColour, 1.0f);
+	matrixBuffer->diffuse = vec4f(material.DiffuseColour, 1.0f);
+	matrixBuffer->specular = vec4f(material.SpecularColour, 1.0f);
+	matrixBuffer->shininess = shininess;
+	matrixBuffer->padding = vec3f(0, 0, 0); // Ensures 16-byte alignment
+
+	m_dxdevice_context->Unmap(m_material_buffer, 0);
 }

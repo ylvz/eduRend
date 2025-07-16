@@ -1,10 +1,10 @@
 
 Texture2D texDiffuse : register(t0);
 
-cbuffer LightCamBuffer : register(b0)
+cbuffer LightBuffer : register(b0)
 {
-    float4 LightPosition;
-    float4 CameraPosition;
+    float4 lightPos;
+    float4 camPos;
 };
 
 cbuffer MaterialBuffer : register(b1)
@@ -13,6 +13,7 @@ cbuffer MaterialBuffer : register(b1)
     float4 diffuse;
     float4 specular;
     float shininess;
+    float3 padding;
 };
 
 struct PSIn
@@ -30,24 +31,18 @@ struct PSIn
 float4 PS_main(PSIn input) : SV_Target
 {
     float3 N = normalize(input.Normal);
-    float3 L = normalize(LightPosition.xyz - input.PosWorld.xyz); // Light direction
-    float3 V = normalize(CameraPosition.xyz - input.PosWorld.xyz); // View direction (FIXED)
+    float3 L = normalize(lightPos.xyz - input.PosWorld); // Light direction
+    float3 V = normalize(camPos.xyz - input.PosWorld); // View direction (FIXED)
     float3 R = reflect(-L, N); // Reflection vector
 
-// Diffuse (Lambert)
-    float lambert_diffuse = max(dot(N, L), 0.0);
-
-// Specular (Phong)
-    float specular_highlight = pow(max(dot(R, V), 0.0), shininess); // Removed abs()
-
-// Combine components
-    float3 ambient_component = ambient.rgb;
-    float3 diffuse_component = diffuse.rgb * lambert_diffuse;
-    float3 specular_component = specular.rgb * specular_highlight;
-
-// Final color (ensure it's red if testing)
-    float3 phong_illumination = ambient_component + diffuse_component + specular_component;
-    return float4(phong_illumination, 1.0);
+    float3 ambientTerm = ambient.xyz;
+    float diff = max(dot(L, N), 0.0f);
+    float3 diffuseTerm = diffuse.xyz * diff;
+    float spec = pow(max(dot(R, V), 0.0f), shininess);
+    float3 specularTerm = specular.xyz * spec;
+    
+    float3 finalColor = ambientTerm + diffuseTerm + specularTerm;
+    return float4(finalColor, 1.0f);
 
 }
 

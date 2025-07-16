@@ -12,10 +12,6 @@ public:
 
     void Render() const override;
 
-    ID3D11Buffer* m_material_buffer;
-    Material m_material;
-
-    void CubeBuffers(ID3D11Device* dxdevice);
 
 private:
 

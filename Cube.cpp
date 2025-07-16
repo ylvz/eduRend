@@ -135,6 +135,5 @@ void Cube::Render() const
     m_dxdevice_context->IASetVertexBuffers(0, 1, &m_vertex_buffer, &stride, &offset);
     m_dxdevice_context->IASetIndexBuffer(m_index_buffer, DXGI_FORMAT_R32_UINT, 0);
     m_dxdevice_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    UpdateMaterialBuffer(m_material);
     m_dxdevice_context->DrawIndexed(36, 0, 0);
 }

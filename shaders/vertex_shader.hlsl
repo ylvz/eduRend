@@ -31,18 +31,19 @@ PSIn VS_main(VSIn input)
 {
     PSIn output = (PSIn) 0;
 	
-	// Model->View transformation
+    float4 worldPos = mul(ModelToWorldMatrix, float4(input.Pos, 1.0f));
+    output.PosWorld = worldPos.xyz;
+    
+    // Model->View transformation
     matrix MV = mul(WorldToViewMatrix, ModelToWorldMatrix);
-
-	// Model->View->Projection (clip space) transformation
-	// SV_Position expects the output position to be in clip space
+    
+    // Model->View->Projection (clip space) transformation
     matrix MVP = mul(ProjectionMatrix, MV);
-	
-	// Perform transformations and send to output
-    output.Pos = mul(MVP, float4(input.Pos, 1));
-    output.Normal = normalize(mul(ModelToWorldMatrix, float4(input.Normal, 0)).xyz);
+    
+    // Perform transformations and send to output
+    output.Pos = mul(MVP, float4(input.Pos, 1.0f));
+    output.Normal = normalize(mul(ModelToWorldMatrix, float4(input.Normal, 0.0f)).xyz);
     output.TexCoord = input.TexCoord;
-    output.PosWorld = mul(ModelToWorldMatrix, float4(input.Pos, 1)).xyz;
-		
+        
     return output;
 }
