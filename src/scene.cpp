@@ -66,9 +66,6 @@ void OurTestScene::Init()
 
 	// In OurTestScene::Init()
 
-
-
-
 	m_hand = new OBJModel("assets/hand/hand.obj", m_dxdevice, m_dxdevice_context);
 	m_hand2 = new OBJModel("assets/hand/hand.obj", m_dxdevice, m_dxdevice_context);
 	m_sphere = new OBJModel("assets/sphere/sphere.obj", m_dxdevice, m_dxdevice_context);
