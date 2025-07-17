@@ -34,7 +34,7 @@ HRESULT LoadTextureFromFile(
     unsigned bindFlags = D3D11_BIND_SHADER_RESOURCE;
     unsigned miscFlags = 0;
     int mostDetailedMip = 0;
-    
+
     bool useMipMap = (bool)dxdevice_context;
     // Generate mip hierarchy if a m_dxdevice_context is provided
     if (useMipMap)
@@ -180,7 +180,7 @@ HRESULT LoadCubeTextureFromFile(
     srvDesc.Texture2D.MipLevels = desc.MipLevels;
     srvDesc.Texture2D.MostDetailedMip = 0;
     if (FAILED(hr = dxdevice->CreateShaderResourceView(
-        pTexture, 
+        pTexture,
         &srvDesc,
         &texture_out->TextureView)))
     {

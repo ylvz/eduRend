@@ -122,6 +122,18 @@ Cube::Cube(ID3D11Device* dxdevice, ID3D11DeviceContext* dxdevice_context)
     // Create index buffer on device using descriptor & data
     dxdevice->CreateBuffer(&indexbufferDesc, &indexData, &m_index_buffer);
     SETNAME(m_index_buffer, "IndexBuffer");
+    
+    //Textur
+    HRESULT hr = LoadTextureFromFile(
+        dxdevice,
+        dxdevice_context,
+        "assets/textures/fence_diffuse.jpg",
+        &m_material.DiffuseTexture
+    );
+
+    if (FAILED(hr)) {
+        DebugBreak();
+    }
 
     m_number_of_indices = (unsigned int)indices.size();
 }
@@ -134,6 +146,6 @@ void Cube::Render() const
     UINT offset = 0;
     m_dxdevice_context->IASetVertexBuffers(0, 1, &m_vertex_buffer, &stride, &offset);
     m_dxdevice_context->IASetIndexBuffer(m_index_buffer, DXGI_FORMAT_R32_UINT, 0);
-    m_dxdevice_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    m_dxdevice_context->PSSetShaderResources(0, 1, &m_material.DiffuseTexture.TextureView);
     m_dxdevice_context->DrawIndexed(36, 0, 0);
 }

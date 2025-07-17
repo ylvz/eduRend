@@ -56,20 +56,15 @@ void OurTestScene::Init()
 	m_sponza = new OBJModel("assets/crytek-sponza/sponza.obj", m_dxdevice, m_dxdevice_context);
 	m_cube = new Cube(m_dxdevice, m_dxdevice_context);
 	// Set materials for the rest of the models
-	m_cube->SetMaterial(vec3f(0.5f, 0.0f, 0.0f), vec3f(0.1f, 0.1f, 0.1f), vec3f(1.0f, 1.0f, 1.0f));
-	m_sponza->SetMaterial(
-		vec3f(0.3f, 0.3f, 0.3f),
-		vec3f(0.05f, 0.05f, 0.05f),
-		vec3f(1.0f, 1.0f, 1.0f));
-
 
 
 	// In OurTestScene::Init()
 
-	m_hand = new OBJModel("assets/hand/hand.obj", m_dxdevice, m_dxdevice_context);
-	m_hand2 = new OBJModel("assets/hand/hand.obj", m_dxdevice, m_dxdevice_context);
+	//m_hand = new OBJModel("assets/hand/hand.obj", m_dxdevice, m_dxdevice_context);
+	//m_hand2 = new OBJModel("assets/hand/hand.obj", m_dxdevice, m_dxdevice_context);
+
 	m_sphere = new OBJModel("assets/sphere/sphere.obj", m_dxdevice, m_dxdevice_context);
-	m_sphere->SetMaterial(vec3f(0.0f, 0.0f, 0.5f), vec3f(0.0f, 0.0f, 0.2f), vec3f(1.0f, 1.0f, 1.0f));
+	SetSampler(D3D11_FILTER_ANISOTROPIC, D3D11_TEXTURE_ADDRESS_WRAP);
 
 
 
@@ -174,6 +169,8 @@ void OurTestScene::Render()
 	// Obtain the matrices needed for rendering from the camera
 	m_view_matrix = m_camera->WorldToViewMatrix();
 	m_projection_matrix = m_camera->ProjectionMatrix();
+
+	m_dxdevice_context->PSSetSamplers(0, 1, &sampler);
 	//// Load matrices + the Quad's transformation to the device and render it
 	//UpdateTransformationBuffer(m_quad_transform, m_view_matrix, m_projection_matrix);
 	//m_quad->Render();
@@ -184,11 +181,11 @@ void OurTestScene::Render()
 	m_sponza->Render();
 
 	UpdateTransformationBuffer(m_cube_transform, m_view_matrix, m_projection_matrix);
-	UpdateMaterialBuffer(m_cube->m_material, 32.0f);
+	UpdateMaterialBuffer(m_cube->m_material, 1.0f);
 	m_cube->Render();
 
 	UpdateTransformationBuffer(m_sphere_transform, m_view_matrix, m_projection_matrix);
-	UpdateMaterialBuffer(m_sphere->m_material, 32.0f);
+	UpdateMaterialBuffer(m_sphere->m_material, 1.0f);
 	m_sphere->Render();
 
 	//UpdateTransformationBuffer(m_hand_transform, m_view_matrix, m_projection_matrix);
@@ -196,12 +193,6 @@ void OurTestScene::Render()
 
 	//UpdateTransformationBuffer(m_hand2_transform, m_view_matrix, m_projection_matrix);
 	//m_hand2->Render();
-
-
-
-
-
-
 }
 
 void OurTestScene::Release()
@@ -212,6 +203,7 @@ void OurTestScene::Release()
 
 	SAFE_RELEASE(m_transformation_buffer);
 	SAFE_RELEASE(m_lightCam_buffer)
+    SAFE_RELEASE(sampler);
 	// + release other CBuffers
 }
 
@@ -223,6 +215,24 @@ void OurTestScene::OnWindowResized(
 		m_camera->SetAspect(float(new_width) / new_height);
 
 	Scene::OnWindowResized(new_width, new_height);
+}
+
+void OurTestScene::SetSampler(D3D11_FILTER filter, D3D11_TEXTURE_ADDRESS_MODE textureAddressMode)
+{
+	D3D11_SAMPLER_DESC samplerDesc =
+	{
+		filter,
+		textureAddressMode,
+		textureAddressMode,
+		textureAddressMode,
+		0.0f,
+		16,
+		D3D11_COMPARISON_NEVER,
+		{1.0f, 1.0f, 1.0f, 1.0f},
+		-FLT_MAX,
+		FLT_MAX,
+	};
+	m_dxdevice->CreateSamplerState(&samplerDesc, &sampler);
 }
 
 void OurTestScene::InitTransformationBuffer()
@@ -294,13 +304,11 @@ void OurTestScene::UpdateMaterialBuffer(Material material, float shininess)
 {
 	D3D11_MAPPED_SUBRESOURCE resource;
 	m_dxdevice_context->Map(m_material_buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &resource);
-
-	MaterialBuffer* matrixBuffer = reinterpret_cast<MaterialBuffer*>(resource.pData);
-	matrixBuffer->ambient = vec4f(material.AmbientColour, 1.0f);
+	MaterialBuffer* matrixBuffer = (MaterialBuffer*)resource.pData;
 	matrixBuffer->diffuse = vec4f(material.DiffuseColour, 1.0f);
+	matrixBuffer->ambient = vec4f(material.AmbientColour, 1.0f);
 	matrixBuffer->specular = vec4f(material.SpecularColour, 1.0f);
 	matrixBuffer->shininess = shininess;
-	matrixBuffer->padding = vec3f(0, 0, 0); // Ensures 16-byte alignment
-
+	matrixBuffer->padding = vec3f(0, 0, 0);
 	m_dxdevice_context->Unmap(m_material_buffer, 0);
 }
